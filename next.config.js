@@ -34,8 +34,8 @@ const nextConfig = {
   env: {
     CUSTOM_KEY: process.env.CUSTOM_KEY,
   },
-  // Enable standalone output for better deployment
-  output: process.env.NODE_ENV === 'production' ? 'standalone' : undefined,
+  // Enable standalone output for Docker deployment
+  output: 'standalone',
   // Optimize for serverless deployment
   poweredByHeader: false,
   generateEtags: false,

@@ -1,0 +1,26 @@
+# Dockerfile for production
+node_modules
+npm-debug.log
+.git
+.gitignore
+README.md
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.next
+coverage
+.nyc_output
+.cache
+.parcel-cache
+.DS_Store
+*.log
+github-workflows/
+scripts/
+COMPLETE_DEPLOYMENT_GUIDE.md
+DEPLOYMENT_GUIDE.md
+DOCUMENT_AI_SETUP.md
+ENV_VARIABLES_GUIDE.md
+CAREERAI_ADVISOR_COMPREHENSIVE_DOCUMENTATION.md
+RESUME_SCORING_COMPLETE.md
