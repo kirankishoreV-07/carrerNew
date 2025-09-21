@@ -1,0 +1,99 @@
+name: Deploy to Google Cloud App Engine
+
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - 'README.md'
+      - 'docs/**'
+  pull_request:
+    branches: [ main ]
+
+env:
+  PROJECT_ID: gen-ai-472417
+  GAE_SERVICE: default
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run linting
+      run: npm run lint
+
+    - name: Run build test
+      run: npm run build
+      env:
+        NEXTAUTH_SECRET: test-secret
+        GEMINI_API_KEY: test-key
+        NEXT_PUBLIC_FIREBASE_API_KEY: test-key
+        NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: test-domain
+        NEXT_PUBLIC_FIREBASE_PROJECT_ID: test-project
+        NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: test-bucket
+        NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: test-sender
+        NEXT_PUBLIC_FIREBASE_APP_ID: test-app
+        
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Build application
+      run: npm run build
+      env:
+        NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
+        NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
+        NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
+        NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}
+        NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
+        NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
+
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GOOGLE_CLOUD_SERVICE_ACCOUNT_KEY }}
+
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+      with:
+        project_id: ${{ env.PROJECT_ID }}
+
+    - name: Configure gcloud
+      run: |
+        gcloud config set project ${{ env.PROJECT_ID }}
+        gcloud config set app/cloud_build_timeout 1600
+
+    - name: Deploy to App Engine
+      run: |
+        gcloud app deploy app.yaml \
+          --version=$(echo $GITHUB_SHA | cut -c1-7) \
+          --promote \
+          --stop-previous-version \
+          --quiet

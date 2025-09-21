@@ -1,0 +1,51 @@
+runtime: nodejs20
+
+env_variables:
+  NODE_ENV: production
+  GOOGLE_CLOUD_PROJECT_ID: gen-ai-472417
+  GOOGLE_CLOUD_LOCATION: us-central1
+  DOCUMENT_AI_PROJECT_ID: gen-ai-472417
+  DOCUMENT_AI_LOCATION: us
+  DOCUMENT_AI_PROCESSOR_VERSION: rc
+  VERTEX_AI_ENDPOINT: us-central1-aiplatform.googleapis.com
+  VERTEX_AI_MODEL: text-bison@001
+  VERTEX_AI_LOCATION: us-central1
+  BIGQUERY_DATASET_ID: skills_radar_data
+  BIGQUERY_TABLE_JOBS: job_market_data
+  BIGQUERY_TABLE_SKILLS: skills_demand_data
+  BIGQUERY_TABLE_TRENDS: trend_analysis_data
+
+# Automatic scaling configuration
+automatic_scaling:
+  target_cpu_utilization: 0.65
+  target_throughput_utilization: 0.65
+  min_instances: 1
+  max_instances: 10
+  min_pending_latency: 30ms
+  max_pending_latency: automatic
+  max_concurrent_requests: 50
+
+# Resource allocation
+resources:
+  cpu: 1
+  memory_gb: 2
+  disk_size_gb: 10
+
+# Health check configuration
+readiness_check:
+  path: "/api/health"
+  check_interval_sec: 5
+  timeout_sec: 4
+  failure_threshold: 2
+  success_threshold: 2
+  app_start_timeout_sec: 300
+
+liveness_check:
+  path: "/api/health"
+  check_interval_sec: 30
+  timeout_sec: 4
+  failure_threshold: 4
+  success_threshold: 2
+
+# Service configuration
+service: default
